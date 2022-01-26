@@ -320,7 +320,7 @@ def _compile(
     # of 1024 bytes, so always use a param file.
     args.use_param_file("@%s", use_always = True)
 
-    direct_inputs = srcs + resources + analyzer_assemblies + additionalfiles + [toolchain.compiler]
+    direct_inputs = srcs + resources + analyzer_assemblies + additionalfiles + [toolchain.csharp_compiler]
     direct_inputs += [keyfile] if keyfile else []
 
     # dotnet.exe csc.dll /noconfig <other csc args>
@@ -335,7 +335,7 @@ def _compile(
         outputs = outputs,
         executable = toolchain.runtime,
         arguments = [
-            toolchain.compiler.path,
+            toolchain.csharp_compiler.path,
 
             # This can't go in the response file (if it does it won't be seen
             # until it's too late).

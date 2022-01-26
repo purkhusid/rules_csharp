@@ -8,7 +8,8 @@ def _dotnet_toolchain_impl(ctx):
     return [
         platform_common.ToolchainInfo(
             runtime = ctx.attr.runtime.files_to_run,
-            compiler = ctx.file.compiler,
+            csharp_compiler = ctx.file.csharp_compiler,
+            fsharp_compiler = ctx.file.fsharp_compiler,
         ),
     ]
 
@@ -19,13 +20,19 @@ dotnet_toolchain = rule(
             executable = True,
             allow_single_file = True,
             mandatory = True,
-            cfg = "host",
+            cfg = "exec",
         ),
-        "compiler": attr.label(
+        "csharp_compiler": attr.label(
             executable = True,
             allow_single_file = True,
             mandatory = True,
-            cfg = "host",
+            cfg = "exec",
+        ),
+        "fsharp_compiler": attr.label(
+            executable = True,
+            allow_single_file = True,
+            mandatory = True,
+            cfg = "exec",
         ),
     },
 )
@@ -36,7 +43,8 @@ def configure_toolchain(os, exe = "dotnetw"):
     dotnet_toolchain(
         name = "dotnet_x86_64-" + os,
         runtime = "@netcore-sdk-%s//:%s" % (os, exe),
-        compiler = "@netcore-sdk-%s//:sdk/%s/Roslyn/bincore/csc.dll" % (os, DOTNET_SDK_VERSION),
+        csharp_compiler = "@netcore-sdk-%s//:sdk/%s/Roslyn/bincore/csc.dll" % (os, DOTNET_SDK_VERSION),
+        fsharp_compiler = "@netcore-sdk-%s//:fsc_binary" % (os),
     )
 
     native.toolchain(
