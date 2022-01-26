@@ -1,4 +1,5 @@
-# rules_csharp
+# TODO: Rewrite this readme
+# rules_dotnet
 
 [![Build status](https://badge.buildkite.com/3604affadbe7c01a052fb896ee1d83e0111ee3776e390e96b9.svg?branch=master)](https://buildkite.com/bazel/github-dot-com-brightspace-rules-csharp)
 

@@ -62,12 +62,12 @@ Compile a C# DLL
 | target_frameworks |  A list of target framework monikers to buildSee https://docs.microsoft.com/en-us/dotnet/standard/frameworks   | List of strings | optional | [] |
 
 
-<a name="#csharp_library_set"></a>
+<a name="#library_set"></a>
 
-## csharp_library_set
+## library_set
 
 <pre>
-csharp_library_set(<a href="#csharp_library_set-name">name</a>, <a href="#csharp_library_set-deps">deps</a>, <a href="#csharp_library_set-target_framework">target_framework</a>)
+library_set(<a href="#library_set-name">name</a>, <a href="#library_set-deps">deps</a>, <a href="#library_set-target_framework">target_framework</a>)
 </pre>
 
 Defines a set of C# libraries to be depended on together

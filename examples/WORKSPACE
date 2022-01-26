@@ -1,18 +1,18 @@
 local_repository(
-    name = "d2l_rules_csharp",
+    name = "rules_dotnet",
     path = "..",
 )
 
 load(
-    "@d2l_rules_csharp//csharp:defs.bzl",
-    "csharp_register_toolchains",
-    "csharp_repositories",
+    "@rules_dotnet//dotnet:defs.bzl",
+    "dotnet_register_toolchains",
+    "dotnet_repositories",
     "import_nuget_package",
 )
 
-csharp_repositories()
+dotnet_repositories()
 
-csharp_register_toolchains()
+dotnet_register_toolchains()
 
 import_nuget_package(
     name = "ExamplePackageFolder",

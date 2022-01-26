@@ -1,4 +1,4 @@
-load("@d2l_rules_csharp//csharp:defs.bzl", "csharp_library")
+load("@rules_dotnet//dotnet:defs.bzl", "csharp_library")
 
 # This example comes from docs/MultiTargetingDesign.md.
 # It demonstrates how framework selection works, and why, sometimes, we compile

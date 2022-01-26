@@ -1,4 +1,4 @@
-# Documentation for `rules_csharp`
+# Documentation for `rules_dotnet`
 
 ### Topics
 

@@ -7,7 +7,7 @@
 * [How we want it to work](#how-we-want-it-to-work)
 * [Implementation](#implementation)
   * [`import_library` vs `import_multiframework_library`](#import_library-vs-import_multiframework_library)
-  * [The `CSharpAssembly_`-providers](#the-CSharpAssembly_-providers)
+  * [The `DotnetAssembly_`-providers](#the-DotnetAssembly_-providers)
   * [The `fill_in_missing_frameworks` helper](#the-fill_in_missing_frameworks-helper)
 * [Alternative designs](#alternative-designs)
 
@@ -84,11 +84,11 @@ progress. The most important open issues are:
 * The logic for multi-targetting is complete, but until we download the
   framework DLLs for more frameworks we can only see this via external NuGet
 	packages.
-	* [Add additional .NET Frameworks](https://github.com/Brightspace/rules_csharp/issues/6)
-	* [Add .NET Standard frameworks](https://github.com/Brightspace/rules_csharp/issues/7)
-	* [Add .NET Core frameworks](https://github.com/Brightspace/rules_csharp/issues/8)
-* [Make the "default framework" configurable](https://github.com/Brightspace/rules_csharp/issues/16)
-* [Create @net targets](https://github.com/Brightspace/rules_csharp/issues/21)
+	* [Add additional .NET Frameworks](https://github.com/Brightspace/rules_dotnet/issues/6)
+	* [Add .NET Standard frameworks](https://github.com/Brightspace/rules_dotnet/issues/7)
+	* [Add .NET Core frameworks](https://github.com/Brightspace/rules_dotnet/issues/8)
+* [Make the "default framework" configurable](https://github.com/Brightspace/rules_dotnet/issues/16)
+* [Create @net targets](https://github.com/Brightspace/rules_dotnet/issues/21)
 
 ## How we want it to work
 
@@ -176,13 +176,13 @@ frameworks, and create a single target you can use
 rules private, and have increased visibility for your
 `import_multiframework_library` target.
 
-For an example of how this is done, see [how we import NUnit](../csharp/private/nunit/nunitframework.BUILD).
+For an example of how this is done, see [how we import NUnit](../dotnet/private/nunit/nunitframework.BUILD).
 Note that the plan is to do this by default for NuGet packages (with a macro
-in a default BUILD file) soon (issue [#22](https://github.com/Brightspace/rules_csharp/issues/22)).
+in a default BUILD file) soon (issue [#22](https://github.com/Brightspace/rules_dotnet/issues/22)).
 
-### The `CSharpAssembly_`-providers
+### The `DotnetAssembly_`-providers
 
-Each framework gets it's own provider. For example, [`CSharpAssembly_net462`](APIReference.md#CSharpAssembly_net462).
+Each framework gets it's own provider. For example, [`DotnetAssembly_net462`](APIReference.md#DotnetAssembly_net462).
 When you are referencing a dependency, we look up its framework in its
 dependencies providers. If it doesn't exist then the build fails (because the
 dependency is not compatible). If it does, we can form `depset`s (of `File`

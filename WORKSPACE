@@ -1,4 +1,4 @@
-workspace(name = "d2l_rules_csharp")
+workspace(name = "rules_dotnet")
 
 # skylib begin
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")

@@ -1,5 +1,5 @@
 load(
-    "@d2l_rules_csharp//csharp:defs.bzl",
+    "@rules_dotnet//dotnet:defs.bzl",
     "csharp_binary",
     "csharp_library",
     "csharp_nunit_test",

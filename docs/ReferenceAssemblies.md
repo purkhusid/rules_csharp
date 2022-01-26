@@ -20,7 +20,7 @@ compilation of downstream assemblies.
 
 The rules that create compilation actions automatically instruct the compiler
 to generate a reference assembly alongside the proper assembly. Information
-about both files is available via the `CSharpAssembly_`-prefixed providers.
+about both files is available via the `DotnetAssembly_`-prefixed providers.
 
 ## `import_library`
 
