@@ -6,6 +6,7 @@ load(":sdk.bzl", "DOTNET_SDK")
 load("//dotnet/private:rules/create_net_workspace.bzl", "create_net_workspace")
 load("//dotnet/private:macros/nuget.bzl", "nuget_package")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 
 # This macro does a bunch of random targets and doesn't have a unique name.
 # This is an idiomatic pattern for rule initialization.
@@ -15,6 +16,17 @@ def dotnet_repositories():
     _net_workspace()
 
     create_net_workspace()
+
+    # Used for various utilities
+    maybe(
+        http_archive,
+        name = "bazel_skylib",
+        urls = [
+            "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/releases/download/1.1.1/bazel-skylib-1.1.1.tar.gz",
+            "https://github.com/bazelbuild/bazel-skylib/releases/download/1.1.1/bazel-skylib-1.1.1.tar.gz",
+        ],
+        sha256 = "c6966ec828da198c5d9adbaa94c05e3a1c7f21bd012a0b29ba8ddbccb2c93b0d",
+    )
 
     # NUnit
     nuget_package(
@@ -29,6 +41,14 @@ def dotnet_repositories():
         package = "NUnit",
         version = "3.12.0",
         sha256 = "62b67516a08951a20b12b02e5d20b5045edbb687c3aabe9170286ec5bb9000a1",
+    )
+
+    # Required for building the Apphost shimming program
+    nuget_package(
+        name = "Microsoft.NET.HostModel",
+        package = "Microsoft.NET.HostModel",
+        version = "3.1.6",
+        sha256 = "a142f0a518e5a0dfa3f5e00dc131f386dc9de9a6f817a5984ac2f251c0e895c3",
     )
 
     # We need the .NET Core runtime, sdk and compiler for our current OS,

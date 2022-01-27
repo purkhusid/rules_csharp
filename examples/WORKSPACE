@@ -4,15 +4,19 @@ local_repository(
 )
 
 load(
-    "@rules_dotnet//dotnet:defs.bzl",
+    "@rules_dotnet//dotnet/private:repositories.bzl",
     "dotnet_register_toolchains",
     "dotnet_repositories",
-    "import_nuget_package",
 )
 
 dotnet_repositories()
 
 dotnet_register_toolchains()
+
+load(
+    "@rules_dotnet//dotnet:defs.bzl",
+    "import_nuget_package",
+)
 
 import_nuget_package(
     name = "ExamplePackageFolder",

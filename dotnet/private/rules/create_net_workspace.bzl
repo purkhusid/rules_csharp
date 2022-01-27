@@ -19,7 +19,7 @@ _create_net_workspace = repository_rule(
     attrs = {
         "build_file": attr.label(
             allow_single_file = True,
-            default = "@rules_dotnet//dotnet/private:net/BUILD",
+            default = "@rules_dotnet//dotnet/private:net/net.BUILD",
         ),
     },
 )

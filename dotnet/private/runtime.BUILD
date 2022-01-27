@@ -20,6 +20,15 @@ exports_files(
 )
 
 filegroup(
+    name = "apphost",
+    srcs = glob([
+        "sdk/**/AppHostTemplate/apphost.exe",
+        "sdk/**/AppHostTemplate/apphost",
+    ]),
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
     name = "fsc_binary",
     # We glob both fsc.dll and fsc.exe for backwards compatibility
     # Pre .Net 5.0 the file was called fsc.exe but has been changed to fsc.dll

@@ -1,3 +1,7 @@
 bazel-*
+.bazelrc.user
 *.swp
 .vscode
+
+bin
+obj
