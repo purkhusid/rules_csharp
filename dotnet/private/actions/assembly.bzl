@@ -63,7 +63,8 @@ def AssemblyAction(
         target_name,
         target_framework,
         toolchain,
-        runtimeconfig = None):
+        runtimeconfig = None,
+        depsjson = None):
     """Creates an action that runs the CSharp compiler with the specified inputs.
 
     This macro aims to match the [C# compiler](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/compiler-options/listed-alphabetically), with the inputs mapping to compiler options.
@@ -87,6 +88,7 @@ def AssemblyAction(
         target_framework: The target framework moniker for the assembly.
         toolchain: The toolchain that supply the C# compiler.
         runtimeconfig: The runtime configuration of the assembly.
+        depsjson: The deps.json for the assembly.
 
     Returns:
         The compiled csharp artifacts.
@@ -99,11 +101,11 @@ def AssemblyAction(
     defines = _framework_preprocessor_symbols(target_framework) + defines
 
     out_dir = "bazelout/" + target_framework
-    out_ext = "dll" if target == "library" else "exe"
+    out_ext = "dll"
 
     out_dll = actions.declare_file("%s/%s.%s" % (out_dir, assembly_name, out_ext))
     out_iref = None
-    out_ref = actions.declare_file("%s/%s.ref.%s" % (out_dir, assembly_name, out_ext))
+    out_ref = actions.declare_file("%s/ref/%s.%s" % (out_dir, assembly_name, out_ext))
     out_pdb = actions.declare_file("%s/%s.pdb" % (out_dir, assembly_name))
 
     if internals_visible_to_cs == None:
@@ -128,6 +130,7 @@ def AssemblyAction(
             target_framework,
             toolchain,
             runtimeconfig,
+            depsjson,
             out_dll = out_dll,
             out_ref = out_ref,
             out_pdb = out_pdb,
@@ -136,7 +139,7 @@ def AssemblyAction(
         # If the user is using internals_visible_to generate an additional
         # reference-only DLL that contains the internals. We want the
         # InternalsVisibleTo in the main DLL too to be less suprising to users.
-        out_iref = actions.declare_file("%s/%s.iref.%s" % (out_dir, assembly_name, out_ext))
+        out_iref = actions.declare_file("%s/iref/%s.%s" % (out_dir, assembly_name, out_ext))
 
         _compile(
             actions,
@@ -159,6 +162,7 @@ def AssemblyAction(
             target_framework,
             toolchain,
             runtimeconfig,
+            depsjson,
             out_ref = out_iref,
             out_dll = out_dll,
             out_pdb = out_pdb,
@@ -186,6 +190,7 @@ def AssemblyAction(
             target_framework,
             toolchain,
             runtimeconfig,
+            depsjson,
             out_dll = None,
             out_ref = out_ref,
             out_pdb = None,
@@ -203,6 +208,7 @@ def AssemblyAction(
         transitive_runfiles = runfiles,
         actual_tfm = target_framework,
         runtimeconfig = runtimeconfig,
+        depsjson = depsjson,
     )
 
 def _compile(
@@ -226,6 +232,7 @@ def _compile(
         target_framework,
         toolchain,
         runtimeconfig,
+        depsjson,
         out_dll = None,
         out_ref = None,
         out_pdb = None):

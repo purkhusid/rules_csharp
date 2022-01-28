@@ -21,7 +21,7 @@ def is_standard_framework(tfm):
     return tfm.startswith("netstandard")
 
 def is_core_framework(tfm):
-    return tfm.startswith("netcoreapp")
+    return tfm.startswith("netcoreapp") or tfm.startswith("net5.0") or tfm.startswith("net6.0")
 
 def collect_transitive_info(name, deps, tfm):
     """Determine the transitive dependencies by the target framework.

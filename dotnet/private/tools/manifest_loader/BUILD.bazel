@@ -1,0 +1,12 @@
+load(
+    "@rules_dotnet//dotnet:defs.bzl",
+    "csharp_library",
+)
+
+csharp_library(
+    name = "ManifestLoader", # Do not change the name on this target without updating the runtimeconfig generation
+    srcs = ["BazelManifest.cs", "StartupHook.cs"],
+    target_frameworks = ["net6.0"],
+    deps = [],
+    visibility = ["//visibility:public"],
+)

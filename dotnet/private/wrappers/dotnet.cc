@@ -60,6 +60,7 @@ int main(int argc, char** argv) {
       evprintf("APPDATA", dotnetDir),
       evprintf("PROGRAMFILES", dotnetDir),
       evprintf("USERPROFILE", dotnetDir),
+      evprintf("DOTNET_NOLOGO", "1"),  // disable first run messages
       evprintf("DOTNET_CLI_TELEMETRY_OPTOUT", "1"),  // disable telemetry
   };
 

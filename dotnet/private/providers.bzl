@@ -21,6 +21,7 @@ def _make_dotnet_provider(tfm):
             "transitive_runfiles": "Runfiles from the transitive dependencies.",
             "actual_tfm": "The target framework of the actual dlls",
             "runtimeconfig": "An optional runtimeconfig.json for executable assemblies",
+            "depsjson": "An optional deps.json for executable assemblies"
         },
     )
 
@@ -223,6 +224,25 @@ _default_lang_version = {
     "net5.0": "9.0",
     "net6.0": "10.0",
 }
+
+def GetDotnetAssemblyInfoFromLabel(label):
+    """Create a *.deps.json file.
+
+    This file is necessary when running a .NET Core binary.
+
+    Args:
+      label: The label from which the DotnetAssemblyInfo provider should be extracted from
+    Returns:
+        The DotnetAssemblyInfo provider for the target framework of the label
+    """
+    for info in reversed(DotnetAssemblyInfo.values()):
+        provider = label[info]
+        if provider:
+            return provider
+        else:
+            continue
+    fail("No DotnetAassemlyInfo provider found in label {}".format(label))
+
 
 def GetFrameworkVersionInfo(tfm):
     return (

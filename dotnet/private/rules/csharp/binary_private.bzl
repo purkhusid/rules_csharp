@@ -2,12 +2,13 @@
 Base rule for compiling C# binaries and tests.
 """
 
-load("//dotnet/private:providers.bzl", "AnyTargetFrameworkInfo")
+load("//dotnet/private:providers.bzl", "AnyTargetFrameworkInfo", "GetDotnetAssemblyInfoFromLabel")
 load("//dotnet/private:actions/assembly.bzl", "AssemblyAction")
 load(
     "//dotnet/private:actions/misc.bzl",
     "write_internals_visible_to",
     "write_runtimeconfig",
+    "write_depsjson",
 )
 load(
     "//dotnet/private:common.bzl",
@@ -17,20 +18,28 @@ load(
     "is_standard_framework",
 )
 load("@bazel_skylib//lib:paths.bzl", "paths")
+load("@bazel_skylib//lib:dicts.bzl", "dicts")
 
 def _create_shim_exe(ctx, dll):
     runtime = ctx.toolchains["@rules_dotnet//dotnet/private:toolchain_type"].runtime
-    exe = ctx.actions.declare_file(paths.replace_extension(dll.basename, ".exe"), sibling = dll)
+    apphost = ctx.toolchains["@rules_dotnet//dotnet/private:toolchain_type"].apphost
+    manifest_loader = ctx.attr._manifest_loader
+    output = ctx.actions.declare_file(paths.replace_extension(dll.basename, ".exe"), sibling = dll)
 
     ctx.actions.run(
         executable = runtime,
-        arguments = [runtime.path, ctx.file._apphost_shimmer.path, dll.path],
-        inputs = [runtime, ctx.file._apphost_shimmer, dll],
-        tools = [runtime],
-        outputs = [exe],
+        arguments = [GetDotnetAssemblyInfoFromLabel(ctx.attr._apphost_shimmer).out.path, apphost.path, dll.path],
+        inputs = [runtime.executable, dll, apphost, ctx.attr._apphost_shimmer[DefaultInfo].files_to_run.runfiles_manifest],
+        tools = [runtime, ctx.attr._apphost_shimmer.files, manifest_loader.files],
+        outputs = [output],
     )
 
-    return exe
+    return output
+
+def _symlink_manifest_loader(ctx, executable):
+    loader = ctx.actions.declare_file("ManifestLoader.dll", sibling = executable)
+    ctx.actions.symlink(output = loader, target_file = GetDotnetAssemblyInfoFromLabel(ctx.attr._manifest_loader).out)
+    return loader
 
 def _binary_private_impl(ctx):
     providers = {}
@@ -48,10 +57,17 @@ def _binary_private_impl(ctx):
             fail("It doesn't make sense to build an executable for " + tfm)
 
         runtimeconfig = None
+        depsjson = None
         if is_core_framework(tfm):
             runtimeconfig = write_runtimeconfig(
                 ctx.actions,
                 template = ctx.file.runtimeconfig_template,
+                name = ctx.attr.name,
+                tfm = tfm,
+            )
+            depsjson = write_depsjson(
+                ctx.actions,
+                template = ctx.file.depsjson_template,
                 name = ctx.attr.name,
                 tfm = tfm,
             )
@@ -70,40 +86,52 @@ def _binary_private_impl(ctx):
             resources = ctx.files.resources,
             srcs = ctx.files.srcs,
             out = ctx.attr.out,
-            target = "winexe" if ctx.attr.winexe else ( "exe" if ctx.attr.use_apphost_shim else "library" ),
+            target = "exe",
             target_name = ctx.attr.name,
             target_framework = tfm,
             toolchain = ctx.toolchains["@rules_dotnet//dotnet/private:toolchain_type"],
             runtimeconfig = runtimeconfig,
+            depsjson = depsjson
         )
 
     fill_in_missing_frameworks(ctx.attr.name, providers)
 
     result = providers.values()
+    executable = result[0].out
+    pdb = result[0].pdb
+    runtimeconfig = result[0].runtimeconfig
+    depsjson = result[0].depsjson
 
-    direct_runfiles = [result[0].out, result[0].pdb]
+    direct_runfiles = [executable, pdb]
 
-    if result[0].runtimeconfig != None:
-        direct_runfiles.append(result[0].runtimeconfig)
+    if runtimeconfig != None:
+        direct_runfiles.append(runtimeconfig)
+    if depsjson != None:
+        direct_runfiles.append(depsjson)
 
-    executable = _create_shim_exe(ctx, result[0].out) if ctx.attr.use_apphost_shim else result[0].out 
+    manifest_loader = _symlink_manifest_loader(ctx, executable)
+    direct_runfiles.append(manifest_loader)
+
+    files = [executable, result[0].prefout, pdb]
+    if ctx.attr.use_apphost_shim:
+        executable = _create_shim_exe(ctx, executable)
+        direct_runfiles.append(executable)
+        files = files.append(executable)
+
     result.append(DefaultInfo(
-        executable = result[0].out,
+        executable = executable,
         runfiles = ctx.runfiles(
             files = direct_runfiles,
             transitive_files = result[0].transitive_runfiles,
         ),
-        files = depset([result[0].out, result[0].prefout, result[0].pdb]),
+        files = depset(files),
     ))
 
     return result
 
-csharp_binary_private = rule(
-    _binary_private_impl,
-    doc = """Compile a C# exe.
-This is a private rule used to implement csharp_binary and should not be used directly.""",
-    attrs = {
-        "srcs": attr.label_list(
+# TODO: Deduplicate attrs 
+ATTRS = {
+ "srcs": attr.label_list(
             doc = "C# source files.",
             allow_files = [".cs"],
         ),
@@ -161,6 +189,11 @@ This is a private rule used to implement csharp_binary and should not be used di
             default = ":runtimeconfig.json.tpl",
             allow_single_file = True,
         ),
+        "depsjson_template": attr.label(
+            doc = "A template file to use for generating deps.json",
+            default = ":deps.json.tpl",
+            allow_single_file = True,
+        ),
         "internals_visible_to": attr.string_list(
             doc = "Other C# libraries that can see the assembly's internal symbols. Using this rather than the InternalsVisibleTo assembly attribute will improve build caching.",
         ),
@@ -168,11 +201,21 @@ This is a private rule used to implement csharp_binary and should not be used di
             doc = "Other C# libraries, binaries, or imported DLLs",
             providers = AnyTargetFrameworkInfo,
         ),
-        "_apphost_shimmer": attr.label(
-            default = "@rules_dotnet//dotnet/private/tools/apphost_shimmer:apphost_shimmer", 
-            allow_single_file = True,
-        )
-    },
+        "_manifest_loader": attr.label(
+            default = "@rules_dotnet//dotnet/private/tools/manifest_loader:ManifestLoader",
+            providers = AnyTargetFrameworkInfo,
+        ),
+}
+
+csharp_binary_private = rule(
+    _binary_private_impl,
+    doc = """Compile a C# exe.
+This is a private rule used to implement csharp_binary and should not be used directly.""",
+    attrs = dicts.add(ATTRS,
+        {"_apphost_shimmer": attr.label(
+            default = "@rules_dotnet//dotnet/private/tools/apphost_shimmer:apphost_shimmer",
+            providers = AnyTargetFrameworkInfo,
+        )}),
     executable = True,
     toolchains = ["@rules_dotnet//dotnet/private:toolchain_type"],
 )
@@ -183,73 +226,7 @@ csharp_binary_private_without_shim = rule(
     _binary_private_impl,
     doc = """Compile a C# exe.
 This is a private rule used to implement csharp_binary and should not be used directly.""",
-    attrs = {
-        "srcs": attr.label_list(
-            doc = "C# source files.",
-            allow_files = [".cs"],
-        ),
-        "additionalfiles": attr.label_list(
-            doc = "Extra files to configure analyzers.",
-            allow_files = True,
-        ),
-        "analyzers": attr.label_list(
-            doc = "A list of analyzer references.",
-            providers = AnyTargetFrameworkInfo,
-        ),
-        "keyfile": attr.label(
-            doc = "The key file used to sign the assembly with a strong name.",
-            allow_single_file = True,
-        ),
-        "langversion": attr.string(
-            doc = "The version string for the C# language.",
-        ),
-        "resources": attr.label_list(
-            doc = "A list of files to embed in the DLL as resources.",
-            allow_files = True,
-        ),
-        "out": attr.string(
-            doc = "File name, without extension, of the built assembly.",
-        ),
-        "target_frameworks": attr.string_list(
-            doc = "A list of target framework monikers to build" +
-                  "See https://docs.microsoft.com/en-us/dotnet/standard/frameworks",
-            allow_empty = False,
-        ),
-        "defines": attr.string_list(
-            doc = "A list of preprocessor directive symbols to define.",
-            default = [],
-            allow_empty = True,
-        ),
-        "winexe": attr.bool(
-            doc = "If true, output a winexe-style executable, otherwise" +
-                  "output a console-style executable.",
-            default = False,
-        ),
-        "include_stdrefs": attr.bool(
-            doc = "Whether to reference @net//:StandardReferences (the default set of references that MSBuild adds to every project).",
-            default = True,
-        ),
-        "use_apphost_shim": attr.bool(
-            doc = "Whether to create a executable shim for the binary.",
-            default = False,
-        ),
-        "_stdrefs": attr.label(
-            doc = "The standard set of assemblies to reference.",
-            default = "@net//:StandardReferences",
-        ),
-        "runtimeconfig_template": attr.label(
-            doc = "A template file to use for generating runtimeconfig.json",
-            default = ":runtimeconfig.json.tpl",
-            allow_single_file = True,
-        ),
-        "internals_visible_to": attr.string_list(
-            doc = "Other C# libraries that can see the assembly's internal symbols. Using this rather than the InternalsVisibleTo assembly attribute will improve build caching.",
-        ),
-        "deps": attr.label_list(
-            doc = "Other C# libraries, binaries, or imported DLLs",
-            providers = AnyTargetFrameworkInfo,
-        ),
-    },
+    attrs = ATTRS,
     executable = True,
     toolchains = ["@rules_dotnet//dotnet/private:toolchain_type"],
 )

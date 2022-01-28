@@ -3,11 +3,10 @@ load(
     "csharp_binary_without_shim",
 )
 
-# bazel run //examples:hello
 csharp_binary_without_shim(
     name = "apphost_shimmer",
     srcs = ["Program.cs", "AppHostShellShimMaker.cs"],
     target_frameworks = ["net6.0"],
     deps = ["@Microsoft.NET.HostModel//:Microsoft.NET.HostModel"],
-    use_apphost_shim = False,
+    visibility = ["//visibility:public"],
 )
