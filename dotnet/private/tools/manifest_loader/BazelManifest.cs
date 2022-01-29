@@ -16,6 +16,7 @@ public class BazelManifest
     {
         Environment.GetEnvironmentVariable("RUNFILES_MANIFEST_FILE"),
         $"{AppContext.BaseDirectory}/{System.AppDomain.CurrentDomain.FriendlyName}.exe.runfiles/MANIFEST",
+        $"{AppContext.BaseDirectory}/{System.AppDomain.CurrentDomain.FriendlyName}.dll.runfiles/MANIFEST",
     };
 
     private BazelManifest(string[] lines)
@@ -44,7 +45,7 @@ public class BazelManifest
                 return true;
             }
         }
-
+        Console.WriteLine("No manifest file found!");
         manifest = null;
         return false;
     }
