@@ -15,8 +15,9 @@ public class BazelManifest
     private static readonly string[] _manifest_options = 
     {
         Environment.GetEnvironmentVariable("RUNFILES_MANIFEST_FILE"),
-        $"{AppContext.BaseDirectory}/{System.AppDomain.CurrentDomain.FriendlyName}.exe.runfiles/MANIFEST",
-        $"{AppContext.BaseDirectory}/{System.AppDomain.CurrentDomain.FriendlyName}.dll.runfiles/MANIFEST",
+        Path.Combine($"{AppContext.BaseDirectory}", $"{System.AppDomain.CurrentDomain.FriendlyName}.dll.runfiles", "MANIFEST"),
+        Path.Combine($"{AppContext.BaseDirectory}", $"{System.AppDomain.CurrentDomain.FriendlyName}.exe.runfiles", "MANIFEST"),
+        Path.Combine($"{AppContext.BaseDirectory}", $"{System.AppDomain.CurrentDomain.FriendlyName}.bat.runfiles_manifest"),
     };
 
     private BazelManifest(string[] lines)

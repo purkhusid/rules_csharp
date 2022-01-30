@@ -12,6 +12,7 @@ exports_files([
     "runtimeconfig.json.tpl",
     "deps.json.tpl",
     "launcher.sh.tpl",
+    "launcher.bat.tpl",
 ])
 
 toolchain_type(name = "toolchain_type")

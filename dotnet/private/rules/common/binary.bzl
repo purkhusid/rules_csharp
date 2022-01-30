@@ -14,8 +14,13 @@ load(
     "is_core_framework",
     "is_standard_framework",
 )
-load("//dotnet/private:windows_utils.bzl", "is_windows", "create_windows_native_launcher_script")
 load("@bazel_skylib//lib:paths.bzl", "paths")
+
+def _to_manifest_path(ctx, file):
+    if file.short_path.startswith("../"):
+        return file.short_path[3:]
+    else:
+        return ctx.workspace_name + "/" + file.short_path
 
 def _create_shim_exe(ctx, dll):
     runtime = ctx.toolchains["@rules_dotnet//dotnet/private:toolchain_type"].runtime
@@ -26,7 +31,7 @@ def _create_shim_exe(ctx, dll):
     ctx.actions.run(
         executable = runtime.files_to_run,
         arguments = [ctx.executable._apphost_shimmer.path, apphost.path, dll.path],
-        inputs = [apphost, dll],
+        inputs = [apphost, dll, ctx.attr._apphost_shimmer.files_to_run.runfiles_manifest],
         tools = [ctx.attr._apphost_shimmer.files],
         outputs = [output],
     )
@@ -35,22 +40,34 @@ def _create_shim_exe(ctx, dll):
 
 def _create_launcher(ctx, runfiles, executable):
     runtime = ctx.toolchains["@rules_dotnet//dotnet/private:toolchain_type"].runtime
-    launcher = ctx.actions.declare_file(paths.replace_extension(executable.basename, ".sh"), sibling = executable)
-    ctx.actions.expand_template(
-        template = ctx.file._launcher,
-        output = launcher,
-        substitutions = {
-            "TEMPLATED_dotnet_root": runtime.files_to_run.executable.dirname,
-            "TEMPLATED_executable": executable.short_path,
-        },
-        is_executable = True,
-    )
-    runfiles.append(ctx.file._bash_runfiles)
-    if is_windows(ctx):
-        runfiles.append(launcher)
-        return create_windows_native_launcher_script(ctx, launcher)
+    windows_constraint = ctx.attr._windows_constraint[platform_common.ConstraintValueInfo]
+
+    launcher = ctx.actions.declare_file(paths.replace_extension(executable.basename, ".bat" if  ctx.target_platform_has_constraint(windows_constraint) else ".sh"), sibling = executable)
+
+    if  ctx.target_platform_has_constraint(windows_constraint):
+        ctx.actions.expand_template(
+            template = ctx.file._launcher_bat,
+            output = launcher,
+            substitutions = {
+                "TEMPLATED_dotnet_root": runtime.files_to_run.executable.dirname,
+                "TEMPLATED_executable": executable.short_path,
+            },
+            is_executable = True,
+        )
+        runfiles.append(ctx.file._bash_runfiles)
     else:
-        return launcher
+        ctx.actions.expand_template(
+            template = ctx.file._launcher_sh,
+            output = launcher,
+            substitutions = {
+                "TEMPLATED_dotnet_root": runtime.files_to_run.executable.dirname,
+                "TEMPLATED_executable": executable.short_path,
+            },
+            is_executable = True,
+        )
+        runfiles.append(ctx.file._bash_runfiles)
+
+    return launcher
 
 def _symlink_manifest_loader(ctx, executable):
     loader = ctx.actions.declare_file("ManifestLoader.dll", sibling = executable)

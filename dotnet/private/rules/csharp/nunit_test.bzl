@@ -56,7 +56,9 @@ _nunit_test = rule(
         },
     ),
     test = True,
-    toolchains = ["@rules_dotnet//dotnet/private:toolchain_type"],
+    toolchains = [
+        "@rules_dotnet//dotnet/private:toolchain_type",
+    ],
 )
 
 def csharp_nunit_test(**kwargs):

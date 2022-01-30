@@ -58,7 +58,6 @@ csharp_binary = rule(
     executable = True,
     toolchains = [
         "@rules_dotnet//dotnet/private:toolchain_type",
-        "@bazel_tools//tools/sh:toolchain_type",
     ],
 )
 

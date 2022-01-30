@@ -48,6 +48,7 @@ COMMON_ATTRS = {
         doc = "The standard set of assemblies to reference.",
         default = "@net//:StandardReferences",
     ),
+    "_windows_constraint": attr.label(default = '@platforms//os:windows'),
 }
 
 # These are attributes that are common across all the binary/library/test C# rules
@@ -92,9 +93,14 @@ CSHARP_BINARY_COMMON_ATTRS = dicts.add(
             default = "@bazel_tools//tools/bash/runfiles",
             allow_single_file = True,
         ),
-        "_launcher": attr.label(
-            doc = "A template file for the binary",
+        "_launcher_sh": attr.label(
+            doc = "A template file for the launcher on Linux/MacOS",
             default = ":launcher.sh.tpl",
+            allow_single_file = True,
+        ),
+        "_launcher_bat": attr.label(
+            doc = "A template file for the launcher on Windows",
+            default = ":launcher.bat.tpl",
             allow_single_file = True,
         ),
     },
