@@ -17,6 +17,7 @@ public class BazelManifest
         Environment.GetEnvironmentVariable("RUNFILES_MANIFEST_FILE"),
         Path.Combine($"{AppContext.BaseDirectory}", $"{System.AppDomain.CurrentDomain.FriendlyName}.dll.runfiles", "MANIFEST"),
         Path.Combine($"{AppContext.BaseDirectory}", $"{System.AppDomain.CurrentDomain.FriendlyName}.exe.runfiles", "MANIFEST"),
+        Path.Combine($"{AppContext.BaseDirectory}", $"{System.AppDomain.CurrentDomain.FriendlyName}.sh.runfiles", "MANIFEST"),
         Path.Combine($"{AppContext.BaseDirectory}", $"{System.AppDomain.CurrentDomain.FriendlyName}.bat.runfiles_manifest"),
     };
 
@@ -39,6 +40,7 @@ public class BazelManifest
     {
         foreach(var option in _manifest_options.Where(o => !string.IsNullOrEmpty(o)))
         {
+            Console.WriteLine(option);
             var file = new FileInfo(option);
             if(file.Exists)
             {

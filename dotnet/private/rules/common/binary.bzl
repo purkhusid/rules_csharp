@@ -32,7 +32,7 @@ def _create_shim_exe(ctx, dll):
         executable = runtime.files_to_run,
         arguments = [ctx.executable._apphost_shimmer.path, apphost.path, dll.path],
         inputs = [apphost, dll, ctx.attr._apphost_shimmer.files_to_run.runfiles_manifest],
-        tools = [ctx.attr._apphost_shimmer.files],
+        tools = [ctx.attr._apphost_shimmer.files, ctx.attr._apphost_shimmer.default_runfiles.files],
         outputs = [output],
     )
 
