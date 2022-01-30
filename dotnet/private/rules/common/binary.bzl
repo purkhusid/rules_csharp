@@ -47,7 +47,7 @@ def _create_launcher(ctx, runfiles, executable):
     )
     runfiles.append(ctx.file._bash_runfiles)
     if is_windows(ctx):
-        runfiles.append(ctx.outputs.launcher_sh)
+        runfiles.append(launcher)
         return create_windows_native_launcher_script(ctx, launcher)
     else:
         return launcher
