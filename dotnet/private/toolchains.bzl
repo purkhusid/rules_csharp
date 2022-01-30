@@ -7,7 +7,7 @@ load(":sdk.bzl", "DOTNET_SDK_VERSION")
 def _dotnet_toolchain_impl(ctx):
     return [
         platform_common.ToolchainInfo(
-            runtime = ctx.attr.runtime.files_to_run,
+            runtime = ctx.attr.runtime,
             csharp_compiler = ctx.file.csharp_compiler,
             fsharp_compiler = ctx.file.fsharp_compiler,
             apphost = ctx.file.apphost,
@@ -49,7 +49,7 @@ dotnet_toolchain = rule(
 def configure_toolchain(os, exe = "dotnetw"):
     dotnet_toolchain(
         name = "dotnet_x86_64-" + os,
-        runtime = "@netcore-sdk-%s//:%s" % (os, exe),
+        runtime = Label("@netcore-sdk-%s//:runtime" % (os)),
         csharp_compiler = "@netcore-sdk-%s//:sdk/%s/Roslyn/bincore/csc.dll" % (os, DOTNET_SDK_VERSION),
         fsharp_compiler = "@netcore-sdk-%s//:fsc_binary" % (os),
         apphost = "@netcore-sdk-%s//:apphost" % (os),

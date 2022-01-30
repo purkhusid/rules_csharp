@@ -2,16 +2,6 @@ load("@rules_cc//cc:defs.bzl", "cc_binary")
 load("@rules_dotnet//dotnet:defs.bzl", "dotnet_wrapper")
 
 exports_files(
-    glob(
-        [
-            "dotnet",
-            "dotnet.exe",  # windows, yeesh
-        ],
-        allow_empty = True,
-    ) + glob([
-        "host/**/*",
-        "shared/**/*",
-    ]) +
     # csharp compiler: csc
     glob([
         "sdk/**/Roslyn/bincore/**/*",
@@ -20,9 +10,25 @@ exports_files(
 )
 
 filegroup(
+    name = "runtime",
+    srcs = glob(
+        [
+            "dotnet",
+            "dotnet.exe",  # windows
+        ],
+        allow_empty = True,
+    ),
+    data = glob([
+        "host/**/*",
+        "shared/**/*",
+    ]),
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
     name = "apphost",
     srcs = glob([
-        "sdk/**/AppHostTemplate/apphost.exe",
+        "sdk/**/AppHostTemplate/apphost.exe", # windows
         "sdk/**/AppHostTemplate/apphost",
     ]),
     visibility = ["//visibility:public"],

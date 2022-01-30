@@ -11,6 +11,7 @@ exports_files([
     "wrappers/dotnet.cc",
     "runtimeconfig.json.tpl",
     "deps.json.tpl",
+    "launcher.sh.tpl",
 ])
 
 toolchain_type(name = "toolchain_type")

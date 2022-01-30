@@ -13,6 +13,7 @@ load(
     "DotnetAssemblyInfo",
     "GetFrameworkVersionInfo",
 )
+load("//dotnet/private:actions/misc.bzl", "write_internals_visible_to")
 
 def _format_ref_arg(assembly):
     return "/r:" + assembly.path
@@ -53,7 +54,6 @@ def AssemblyAction(
         defines,
         deps,
         internals_visible_to,
-        internals_visible_to_cs,
         keyfile,
         langversion,
         resources,
@@ -77,7 +77,6 @@ def AssemblyAction(
         defines: The list of conditional compilation symbols.
         deps: The list of other libraries to be linked in to the assembly.
         internals_visible_to: An optional list of assemblies that can see this assemblies internal symbols.
-        internals_visible_to_cs: An optional generated .cs file with InternalsVisibleTo attributes.
         keyfile: Specifies a strong name key file of the assembly.
         langversion: Specify language version: Default, ISO-1, ISO-2, 3, 4, 5, 6, 7, 7.1, 7.2, 7.3, or Latest
         resources: The list of resouces to be embedded in the assembly.
@@ -108,7 +107,7 @@ def AssemblyAction(
     out_ref = actions.declare_file("%s/ref/%s.%s" % (out_dir, assembly_name, out_ext))
     out_pdb = actions.declare_file("%s/%s.pdb" % (out_dir, assembly_name))
 
-    if internals_visible_to_cs == None:
+    if len(internals_visible_to) == 0:
         _compile(
             actions,
             additionalfiles,
@@ -140,6 +139,12 @@ def AssemblyAction(
         # reference-only DLL that contains the internals. We want the
         # InternalsVisibleTo in the main DLL too to be less suprising to users.
         out_iref = actions.declare_file("%s/iref/%s.%s" % (out_dir, assembly_name, out_ext))
+
+        internals_visible_to_cs = write_internals_visible_to(
+            actions,
+            name = target_name,
+            others = internals_visible_to,
+        )
 
         _compile(
             actions,
@@ -340,7 +345,7 @@ def _compile(
             transitive = [refs] + [native_dlls],
         ),
         outputs = outputs,
-        executable = toolchain.runtime,
+        executable = toolchain.runtime.files_to_run,
         arguments = [
             toolchain.csharp_compiler.path,
 
